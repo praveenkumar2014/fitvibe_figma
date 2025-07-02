@@ -1,0 +1,157 @@
+// COMPLETE PHONE INPUT IMPLEMENTATION
+// This file contains all the necessary code for the international phone input functionality
+
+// ===============================
+// 1. COMPONENT IMPLEMENTATION
+// ===============================
+
+import React, { useState, useEffect } from 'react';
+
+interface PhoneInputProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+}
+
+const COUNTRIES = [
+  { code: 'GB', name: '🇬🇧 United Kingdom', dialCode: '+44' },
+  { code: 'US', name: '🇺🇸 United States', dialCode: '+1' },
+  { code: 'CA', name: '🇨🇦 Canada', dialCode: '+1' },
+  { code: 'AU', name: '🇦🇺 Australia', dialCode: '+61' },
+  { code: 'NZ', name: '🇳🇿 New Zealand', dialCode: '+64' },
+  { code: 'IE', name: '🇮🇪 Ireland', dialCode: '+353' },
+];
+
+export function InternationalPhoneInput({ label, value, onChange, error }: PhoneInputProps) {
+  const [selectedCode, setSelectedCode] = useState('+44');
+  const [phoneNumber, setPhoneNumber] = useState('');
+
+  useEffect(() => {
+    // Initialize from provided value if it exists
+    if (value) {
+      const match = value.match(/^\+(\d+)\s*(.*)$/);
+      if (match) {
+        const [, code, number] = match;
+        setSelectedCode(`+${code}`);
+        setPhoneNumber(number.trim());
+      }
+    }
+  }, [value]); // Added value dependency
+
+  const handleCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCode = e.target.value;
+    setSelectedCode(newCode);
+    onChange(`${newCode} ${phoneNumber}`.trim());
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPhone = e.target.value.replace(/[^\d\s]/g, '');
+    setPhoneNumber(newPhone);
+    onChange(`${selectedCode} ${newPhone}`.trim());
+  };
+
+  return (
+    <label className="block">
+      <span className="text-gray-700 font-bold">{label}</span>
+      <div className="phone-input-container">
+        <select
+          value={selectedCode}
+          onChange={handleCodeChange}
+          className={`phone-input-select ${
+            error ? 'border-red-500' : 'border-gray-300'
+          }`}
+        >
+          {COUNTRIES.map(country => (
+            <option key={country.code} value={country.dialCode}>
+              {country.name}
+            </option>
+          ))}
+        </select>
+        
+        <input
+          type="tel"
+          value={phoneNumber}
+          onChange={handlePhoneChange}
+          placeholder="Enter phone number"
+          className={`phone-input-number ${
+            error ? 'border-red-500' : 'border-gray-300'
+          }`}
+          required
+        />
+      </div>
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+    </label>
+  );
+}
+
+// ===============================
+// 2. REQUIRED CSS STYLES
+// ===============================
+
+/*
+Add these styles to your CSS file:
+
+.phone-input-container {
+  @apply flex gap-2 mt-1;
+}
+
+.phone-input-select {
+  @apply w-[180px] h-10 px-3 py-2 bg-white border rounded-md shadow-sm;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  @apply text-sm;
+}
+
+.phone-input-number {
+  @apply flex-1 h-10 px-3 py-2 bg-white border rounded-md shadow-sm;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  @apply text-base;
+}
+*/
+
+// ===============================
+// 3. USAGE EXAMPLE
+// ===============================
+
+// In your form component:
+function ContactForm() {
+  const [phone, setPhone] = useState('');
+  
+  return (
+    <InternationalPhoneInput
+      label="Phone Number:"
+      value={phone}
+      onChange={setPhone}
+      error={phoneError}
+    />
+  );
+}
+
+// ===============================
+// 4. VALIDATION FUNCTION
+// ===============================
+
+export const isValidPhone = (phone: string): boolean => {
+  // Allow international phone numbers with proper formatting
+  return /^\+\d{1,4}[\d\s-]{8,}$/.test(phone);
+};
+
+// ===============================
+// 5. INTEGRATION NOTES
+// ===============================
+
+/*
+Key Points:
+1. The component handles both country code and phone number input
+2. Proper validation is implemented for international numbers
+3. CSS classes ensure consistent styling with other form elements
+4. Error handling is built-in
+5. The component maintains its own state while syncing with parent form
+
+Common Issues:
+1. Make sure all CSS classes are properly loaded
+2. Ensure the component is wrapped in a form context
+3. Verify that onChange handlers are properly connected
+4. Check that validation is being called correctly
+5. Confirm that the phone number format matches your backend expectations
+*/
